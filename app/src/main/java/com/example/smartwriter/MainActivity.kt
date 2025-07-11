@@ -12,14 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Send
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,15 +27,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.smartwriter.ui.composables.HomeScreen
@@ -51,15 +48,12 @@ import com.example.smartwriter.ui.theme.SmartWriterTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-private data object HomeRoute
-
-private data object SummarisationRoute
-
-private data object ProofreadingRoute
-
-private data object TextRewritingRoute
-
-private data object ImageDescRoute
+sealed interface NavRoute
+private data object HomeRoute: NavRoute
+private data object SummarisationRoute: NavRoute
+private data object ProofreadingRoute: NavRoute
+private data object TextRewritingRoute: NavRoute
+private data object ImageDescRoute: NavRoute
 
 @ExperimentalMaterial3Api
 @AndroidEntryPoint
@@ -74,6 +68,7 @@ class MainActivity : ComponentActivity() {
             SmartWriterTheme {
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
+                val state by viewModel.state.collectAsStateWithLifecycle()
 
                 ModalNavigationDrawer(
                     drawerState = drawerState,
@@ -91,23 +86,44 @@ class MainActivity : ComponentActivity() {
                                 Text(stringResource(R.string.main_activity_drawer_ai_tools), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
                                 NavigationDrawerItem(
                                     label = { Text(stringResource(R.string.main_activity_drawer_text_summarization)) },
-                                    selected = false,
-                                    onClick = { /* Handle click */ }
+                                    selected = state.selectedScreen == SelectedScreen.SUMMARIZATION,
+                                    onClick = {
+                                        scope.launch {
+                                            drawerState.close()
+                                        }
+                                        viewModel.onTextSummarizationClicked()
+
+                                    },
                                 )
                                 NavigationDrawerItem(
                                     label = { Text(stringResource(R.string.main_activity_drawer_proofreading)) },
-                                    selected = false,
-                                    onClick = { /* Handle click */ }
+                                    selected = state.selectedScreen == SelectedScreen.PROOFREADING,
+                                    onClick = {
+                                        scope.launch {
+                                            drawerState.close()
+                                        }
+                                        viewModel.onProofreadingClicked()
+                                    },
                                 )
                                 NavigationDrawerItem(
                                     label = { Text(stringResource(R.string.main_activity_drawer_text_rewriting)) },
-                                    selected = false,
-                                    onClick = { /* Handle click */ }
+                                    selected = state.selectedScreen == SelectedScreen.TEXT_REWRITING,
+                                    onClick = {
+                                        scope.launch {
+                                            drawerState.close()
+                                        }
+                                        viewModel.onTextRewritingClicked()
+                                    },
                                 )
                                 NavigationDrawerItem(
                                     label = { Text(stringResource(R.string.main_activity_drawer_image_description)) },
-                                    selected = false,
-                                    onClick = { /* Handle click */ }
+                                    selected = state.selectedScreen == SelectedScreen.IMAGE_DESCRIPTION,
+                                    onClick = {
+                                        scope.launch {
+                                            drawerState.close()
+                                        }
+                                        viewModel.onImageDescriptionClicked()
+                                    },
                                 )
 
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -115,9 +131,14 @@ class MainActivity : ComponentActivity() {
                                 Text(stringResource(R.string.main_activity_drawer_other), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
                                 NavigationDrawerItem(
                                     label = { Text(stringResource(R.string.main_activity_drawer_home)) },
-                                    selected = false,
+                                    selected = state.selectedScreen == SelectedScreen.HOME,
                                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                                    onClick = { /* Handle click */ },
+                                    onClick = {
+                                        scope.launch {
+                                            drawerState.close()
+                                        }
+                                        viewModel.onHomeClicked()
+                                    },
                                 )
                                 Spacer(Modifier.height(12.dp))
                             }
@@ -145,8 +166,38 @@ class MainActivity : ComponentActivity() {
                         }
                     ) { contentPadding ->
                         val backStack = remember {
-                            mutableStateListOf(HomeRoute)
+                            mutableStateListOf<NavRoute>(HomeRoute)
                         }
+
+                        LaunchedEffect(state.selectedScreen) {
+                            when (state.selectedScreen) {
+                                SelectedScreen.HOME -> {
+                                    backStack.clear()              // reset to root
+                                    backStack += HomeRoute
+                                }
+                                SelectedScreen.SUMMARIZATION -> {
+                                        if (backStack.lastOrNull() !is SummarisationRoute) {
+                                            backStack += SummarisationRoute
+                                        }
+                                }
+                                SelectedScreen.PROOFREADING -> {
+                                    if (backStack.lastOrNull() !is ProofreadingRoute) {
+                                        backStack += ProofreadingRoute
+                                    }
+                                }
+                                SelectedScreen.TEXT_REWRITING -> {
+                                    if (backStack.lastOrNull() !is TextRewritingRoute) {
+                                        backStack += TextRewritingRoute
+                                    }
+                                }
+                                SelectedScreen.IMAGE_DESCRIPTION -> {
+                                    if (backStack.lastOrNull() !is ImageDescRoute) {
+                                        backStack += ImageDescRoute
+                                    }
+                                }
+                            }
+                        }
+
                         NavDisplay(
                             modifier = Modifier.padding(contentPadding),
                             backStack = backStack,
