@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">SmartWriter</string>
+    <string name="main_activity_drawer_text_summarization">Text Summarization</string>
+    <string name="main_activity_drawer_proofreading">Proofreading</string>
+    <string name="main_activity_drawer_text_rewriting">Text rewriting</string>
+    <string name="main_activity_drawer_image_description">Image description</string>
+    <string name="main_activity_drawer_other">Other</string>
+    <string name="main_activity_drawer_home">Home</string>
+    <string name="main_activity_drawer_ai_tools">AI Tools</string>
+    <string name="main_activity_drawer_smart_writer">Smart Writer</string>
 </resources>

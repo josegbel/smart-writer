@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -36,6 +37,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
@@ -46,6 +48,7 @@ import com.example.smartwriter.ui.composables.ProofreadingScreen
 import com.example.smartwriter.ui.composables.SummarisationScreen
 import com.example.smartwriter.ui.composables.TextRewritingScreen
 import com.example.smartwriter.ui.theme.SmartWriterTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 private data object HomeRoute
@@ -59,7 +62,11 @@ private data object TextRewritingRoute
 private data object ImageDescRoute
 
 @ExperimentalMaterial3Api
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: MainActivityViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -73,40 +80,41 @@ class MainActivity : ComponentActivity() {
                     drawerContent = {
                         ModalDrawerSheet {
                             Column(
-                                modifier = Modifier.padding(horizontal = 16.dp)
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
                                     .verticalScroll(rememberScrollState())
                             ) {
                                 Spacer(Modifier.height(12.dp))
-                                Text("Smart Writer", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleLarge)
+                                Text(stringResource(R.string.main_activity_drawer_smart_writer), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleLarge)
                                 HorizontalDivider()
 
-                                Text("AI Tools", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(R.string.main_activity_drawer_ai_tools), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
                                 NavigationDrawerItem(
-                                    label = { Text("Text Summarization") },
+                                    label = { Text(stringResource(R.string.main_activity_drawer_text_summarization)) },
                                     selected = false,
                                     onClick = { /* Handle click */ }
                                 )
                                 NavigationDrawerItem(
-                                    label = { Text("Proofreading") },
+                                    label = { Text(stringResource(R.string.main_activity_drawer_proofreading)) },
                                     selected = false,
                                     onClick = { /* Handle click */ }
                                 )
                                 NavigationDrawerItem(
-                                    label = { Text("Text rewriting") },
+                                    label = { Text(stringResource(R.string.main_activity_drawer_text_rewriting)) },
                                     selected = false,
                                     onClick = { /* Handle click */ }
                                 )
                                 NavigationDrawerItem(
-                                    label = { Text("Image description") },
+                                    label = { Text(stringResource(R.string.main_activity_drawer_image_description)) },
                                     selected = false,
                                     onClick = { /* Handle click */ }
                                 )
 
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                                Text("Other", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(R.string.main_activity_drawer_other), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
                                 NavigationDrawerItem(
-                                    label = { Text("Home") },
+                                    label = { Text(stringResource(R.string.main_activity_drawer_home)) },
                                     selected = false,
                                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
                                     onClick = { /* Handle click */ },
