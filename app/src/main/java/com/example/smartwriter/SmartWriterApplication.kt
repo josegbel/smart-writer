@@ -5,8 +5,7 @@ import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class SmartWriterApplication: Application() {
-
+class SmartWriterApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         Log.d(SmartWriterApplication::class.java.simpleName, "Application started")

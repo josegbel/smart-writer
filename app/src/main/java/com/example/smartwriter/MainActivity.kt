@@ -29,10 +29,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -49,16 +49,20 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 sealed interface NavRoute
-private data object HomeRoute: NavRoute
-private data object SummarisationRoute: NavRoute
-private data object ProofreadingRoute: NavRoute
-private data object TextRewritingRoute: NavRoute
-private data object ImageDescRoute: NavRoute
+
+private data object HomeRoute : NavRoute
+
+private data object SummarisationRoute : NavRoute
+
+private data object ProofreadingRoute : NavRoute
+
+private data object TextRewritingRoute : NavRoute
+
+private data object ImageDescRoute : NavRoute
 
 @ExperimentalMaterial3Api
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     private val viewModel: MainActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,15 +79,24 @@ class MainActivity : ComponentActivity() {
                     drawerContent = {
                         ModalDrawerSheet {
                             Column(
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .verticalScroll(rememberScrollState())
+                                modifier =
+                                    Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .verticalScroll(rememberScrollState()),
                             ) {
                                 Spacer(Modifier.height(12.dp))
-                                Text(stringResource(R.string.main_activity_drawer_smart_writer), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleLarge)
+                                Text(
+                                    stringResource(R.string.main_activity_drawer_smart_writer),
+                                    modifier = Modifier.padding(16.dp),
+                                    style = MaterialTheme.typography.titleLarge,
+                                )
                                 HorizontalDivider()
 
-                                Text(stringResource(R.string.main_activity_drawer_ai_tools), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    stringResource(R.string.main_activity_drawer_ai_tools),
+                                    modifier = Modifier.padding(16.dp),
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
                                 NavigationDrawerItem(
                                     label = { Text(stringResource(R.string.main_activity_drawer_text_summarization)) },
                                     selected = state.selectedScreen == SelectedScreen.SUMMARIZATION,
@@ -92,7 +105,6 @@ class MainActivity : ComponentActivity() {
                                             drawerState.close()
                                         }
                                         viewModel.onTextSummarizationClicked()
-
                                     },
                                 )
                                 NavigationDrawerItem(
@@ -128,7 +140,11 @@ class MainActivity : ComponentActivity() {
 
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                                Text(stringResource(R.string.main_activity_drawer_other), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    stringResource(R.string.main_activity_drawer_other),
+                                    modifier = Modifier.padding(16.dp),
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
                                 NavigationDrawerItem(
                                     label = { Text(stringResource(R.string.main_activity_drawer_home)) },
                                     selected = state.selectedScreen == SelectedScreen.HOME,
@@ -161,24 +177,25 @@ class MainActivity : ComponentActivity() {
                                     }) {
                                         Icon(Icons.Default.Menu, contentDescription = "Menu")
                                     }
-                                }
+                                },
                             )
-                        }
+                        },
                     ) { contentPadding ->
-                        val backStack = remember {
-                            mutableStateListOf<NavRoute>(HomeRoute)
-                        }
+                        val backStack =
+                            remember {
+                                mutableStateListOf<NavRoute>(HomeRoute)
+                            }
 
                         LaunchedEffect(state.selectedScreen) {
                             when (state.selectedScreen) {
                                 SelectedScreen.HOME -> {
-                                    backStack.clear()              // reset to root
+                                    backStack.clear() // reset to root
                                     backStack += HomeRoute
                                 }
                                 SelectedScreen.SUMMARIZATION -> {
-                                        if (backStack.lastOrNull() !is SummarisationRoute) {
-                                            backStack += SummarisationRoute
-                                        }
+                                    if (backStack.lastOrNull() !is SummarisationRoute) {
+                                        backStack += SummarisationRoute
+                                    }
                                 }
                                 SelectedScreen.PROOFREADING -> {
                                     if (backStack.lastOrNull() !is ProofreadingRoute) {

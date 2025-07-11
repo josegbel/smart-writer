@@ -14,7 +14,7 @@ fun HomeScreen() {
     Box(modifier = Modifier.fillMaxSize().padding(12.dp)) {
         Text(
             modifier = Modifier.align(alignment = Alignment.TopCenter),
-            text = "Welcome to SmartWriter! \n\nWe're glad to have you. To get started, open the navigation drawer (the menu icon, usually at the top-left) to find all the different sections of the app."
+            text = "Welcome to SmartWriter! \n\nWe're glad to have you. To get started, open the navigation drawer (the menu icon, usually at the top-left) to find all the different sections of the app.",
         )
     }
 }
