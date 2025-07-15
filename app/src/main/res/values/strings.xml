@@ -9,4 +9,5 @@
     <string name="main_activity_drawer_ai_tools">AI Tools</string>
     <string name="main_activity_drawer_smart_writer">Smart Writer</string>
     <string name="summarization_screen_text_field_hint">Enter text to summarise</string>
+    <string name="top_app_bar_title">SmartWriter</string>
 </resources>
