@@ -24,15 +24,18 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -44,8 +47,10 @@ import com.example.smartwriter.ui.composables.ImageDescScreen
 import com.example.smartwriter.ui.composables.ProofreadingScreen
 import com.example.smartwriter.ui.composables.SummarisationScreen
 import com.example.smartwriter.ui.composables.TextRewritingScreen
+import com.example.smartwriter.ui.model.SummarisationUiEvent
 import com.example.smartwriter.ui.theme.SmartWriterTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 sealed interface NavRoute
@@ -161,95 +166,132 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                 ) {
-                    Scaffold(
-                        topBar = {
-                            TopAppBar(
-                                title = { Text("SmartWriter") },
-                                navigationIcon = {
-                                    IconButton(onClick = {
-                                        scope.launch {
-                                            if (drawerState.isClosed) {
-                                                drawerState.open()
-                                            } else {
-                                                drawerState.close()
+                    val LocalSnackbarHostState =
+                        staticCompositionLocalOf<SnackbarHostState> {
+                            error("SnackbarHostState not provided")
+                        }
+
+                    val snackbarHostState = remember { SnackbarHostState() }
+                    CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+                        Scaffold(
+                            snackbarHost = {
+                                SnackbarHost(
+                                    hostState = snackbarHostState,
+                                    modifier = Modifier.padding(8.dp),
+                                )
+                            },
+                            topBar = {
+                                TopAppBar(
+                                    title = { Text("SmartWriter") },
+                                    navigationIcon = {
+                                        IconButton(onClick = {
+                                            scope.launch {
+                                                if (drawerState.isClosed) {
+                                                    drawerState.open()
+                                                } else {
+                                                    drawerState.close()
+                                                }
                                             }
+                                        }) {
+                                            Icon(Icons.Default.Menu, contentDescription = "Menu")
                                         }
-                                    }) {
-                                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                                    },
+                                )
+                            },
+                        ) { contentPadding ->
+                            val backStack =
+                                remember {
+                                    mutableStateListOf<NavRoute>(HomeRoute)
+                                }
+
+                            LaunchedEffect(state.selectedScreen) {
+                                when (state.selectedScreen) {
+                                    SelectedScreen.HOME -> {
+                                        backStack.clear() // reset to root
+                                        backStack += HomeRoute
+                                    }
+
+                                    SelectedScreen.SUMMARIZATION -> {
+                                        if (backStack.lastOrNull() !is SummarisationRoute) {
+                                            backStack += SummarisationRoute
+                                        }
+                                    }
+
+                                    SelectedScreen.PROOFREADING -> {
+                                        if (backStack.lastOrNull() !is ProofreadingRoute) {
+                                            backStack += ProofreadingRoute
+                                        }
+                                    }
+
+                                    SelectedScreen.TEXT_REWRITING -> {
+                                        if (backStack.lastOrNull() !is TextRewritingRoute) {
+                                            backStack += TextRewritingRoute
+                                        }
+                                    }
+
+                                    SelectedScreen.IMAGE_DESCRIPTION -> {
+                                        if (backStack.lastOrNull() !is ImageDescRoute) {
+                                            backStack += ImageDescRoute
+                                        }
+                                    }
+                                }
+                            }
+
+                            NavDisplay(
+                                modifier = Modifier.padding(contentPadding),
+                                backStack = backStack,
+                                onBack = { backStack.removeLastOrNull() },
+                                entryProvider = { key ->
+                                    when (key) {
+                                        is HomeRoute ->
+                                            NavEntry(key) {
+                                                HomeScreen()
+                                            }
+
+                                        is SummarisationRoute ->
+                                            NavEntry(key) {
+                                                val viewModel by viewModels<SummarisationViewModel>()
+                                                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                                                val localSnackBarState = LocalSnackbarHostState.current
+
+                                                LaunchedEffect(Unit) {
+                                                    viewModel.uiEvent.collectLatest {
+                                                        when (it) {
+                                                            is SummarisationUiEvent.Error -> {
+                                                                if (it.message.isNotBlank()) {
+                                                                    localSnackBarState.showSnackbar(it.message)
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                SummarisationScreen(
+                                                    uiState = uiState,
+                                                    onInputTextChanged = viewModel::onInputTextChanged,
+                                                    onSummariseClicked = viewModel::onSummariseClicked,
+                                                )
+                                            }
+
+                                        is ProofreadingRoute ->
+                                            NavEntry(key) {
+                                                ProofreadingScreen()
+                                            }
+
+                                        is TextRewritingRoute ->
+                                            NavEntry(key) {
+                                                TextRewritingScreen()
+                                            }
+
+                                        is ImageDescRoute ->
+                                            NavEntry(key) {
+                                                ImageDescScreen()
+                                            }
+
+                                        else -> throw IllegalArgumentException("Unknown route: $key")
                                     }
                                 },
                             )
-                        },
-                    ) { contentPadding ->
-                        val backStack =
-                            remember {
-                                mutableStateListOf<NavRoute>(HomeRoute)
-                            }
-
-                        LaunchedEffect(state.selectedScreen) {
-                            when (state.selectedScreen) {
-                                SelectedScreen.HOME -> {
-                                    backStack.clear() // reset to root
-                                    backStack += HomeRoute
-                                }
-                                SelectedScreen.SUMMARIZATION -> {
-                                    if (backStack.lastOrNull() !is SummarisationRoute) {
-                                        backStack += SummarisationRoute
-                                    }
-                                }
-                                SelectedScreen.PROOFREADING -> {
-                                    if (backStack.lastOrNull() !is ProofreadingRoute) {
-                                        backStack += ProofreadingRoute
-                                    }
-                                }
-                                SelectedScreen.TEXT_REWRITING -> {
-                                    if (backStack.lastOrNull() !is TextRewritingRoute) {
-                                        backStack += TextRewritingRoute
-                                    }
-                                }
-                                SelectedScreen.IMAGE_DESCRIPTION -> {
-                                    if (backStack.lastOrNull() !is ImageDescRoute) {
-                                        backStack += ImageDescRoute
-                                    }
-                                }
-                            }
                         }
-
-                        NavDisplay(
-                            modifier = Modifier.padding(contentPadding),
-                            backStack = backStack,
-                            onBack = { backStack.removeLastOrNull() },
-                            entryProvider = { key ->
-                                when (key) {
-                                    is HomeRoute ->
-                                        NavEntry(key) {
-                                            HomeScreen()
-                                        }
-
-                                    is SummarisationRoute ->
-                                        NavEntry(key) {
-                                            SummarisationScreen()
-                                        }
-
-                                    is ProofreadingRoute ->
-                                        NavEntry(key) {
-                                            ProofreadingScreen()
-                                        }
-
-                                    is TextRewritingRoute ->
-                                        NavEntry(key) {
-                                            TextRewritingScreen()
-                                        }
-
-                                    is ImageDescRoute ->
-                                        NavEntry(key) {
-                                            ImageDescScreen()
-                                        }
-
-                                    else -> throw IllegalArgumentException("Unknown route: $key")
-                                }
-                            },
-                        )
                     }
                 }
             }

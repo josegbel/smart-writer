@@ -54,6 +54,10 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.hilt.android)
+
+    implementation(libs.genai.summarization)
+    implementation(libs.kotlinx.coroutines.guava)
+
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -63,12 +67,3 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
-
-// configurations.all {
-//    resolutionStrategy.eachDependency {
-//        if (requested.group == "com.squareup" && requested.name == "javapoet") {
-//            useVersion("1.13.0") // versión compatible con Hilt moderno
-//            because("Avoid NoSuchMethodError on canonicalName() in Hilt AggregateDepsTask")
-//        }
-//    }
-// }
