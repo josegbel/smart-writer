@@ -1,7 +1,5 @@
 package com.example.smartwriter.ui.model
 
-import com.example.smartwriter.SummarizationType
-
 data class SummarisationUiState(
     val inputText: String =
         "Title: The Rise of Urban Vertical Farming\n" +
@@ -12,6 +10,5 @@ data class SummarisationUiState(
             "\n" +
             "Although initial setup costs remain high due to technology and energy requirements, advancements in automation and renewable energy integration are gradually improving cost efficiency. As climate change and urbanisation continue to pressure traditional farming systems, vertical farming represents a promising step toward more resilient and localised food production.",
     val summary: String = "",
-    val selectedSummarizationType: SummarizationType = SummarizationType.ARTICLE,
     val isLoading: Boolean = false,
 )
