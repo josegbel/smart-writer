@@ -35,6 +35,7 @@ import com.example.smartwriter.ui.composables.screens.ProofreadingScreen
 import com.example.smartwriter.ui.composables.SmartWriterAppBar
 import com.example.smartwriter.ui.composables.screens.SummarisationScreen
 import com.example.smartwriter.ui.composables.screens.TextRewritingScreen
+import com.example.smartwriter.ui.model.ProofreadingUiEvent
 import com.example.smartwriter.ui.model.SummarisationUiEvent
 import com.example.smartwriter.ui.theme.SmartWriterTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -184,7 +185,29 @@ class MainActivity : ComponentActivity() {
 
         is ProofreadingRoute ->
             NavEntry(key) {
-                ProofreadingScreen()
+                val viewModel by viewModels<ProofreadingViewModel>()
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                val localSnackBarState =
+                    LocalSnackbarHostState.current
+
+                LaunchedEffect(Unit) {
+                    viewModel.uiEvent.collectLatest {
+                        when (it) {
+                            is ProofreadingUiEvent.Error -> {
+                                if (it.message.isNotBlank()) {
+                                    localSnackBarState.showSnackbar(
+                                        it.message
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                ProofreadingScreen(
+                    uiState = uiState,
+                    onInputTextChanged = viewModel::onInputTextChanged,
+                    onProofreadClicked = viewModel::onProofreadClicked,
+                )
             }
 
         is TextRewritingRoute ->

@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.hilt.android)
 
     implementation(libs.genai.summarization)
+    implementation(libs.genai.proofreading)
     implementation(libs.kotlinx.coroutines.guava)
 
     ksp(libs.hilt.compiler)

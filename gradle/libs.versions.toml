@@ -11,7 +11,7 @@ kotlin = "2.0.21"
 kotlinxCoroutinesGuava = "1.10.2"
 lifecycleRuntimeKtx = "2.6.1"
 navigation3 = "1.0.0-alpha05"
-summarization = "1.0.0-beta1"
+genAi = "1.0.0-beta1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -29,7 +29,8 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
-genai-summarization = { module = "com.google.mlkit:genai-summarization", version.ref = "summarization" }
+genai-summarization = { module = "com.google.mlkit:genai-summarization", version.ref = "genAi" }
+genai-proofreading = { module = "com.google.mlkit:genai-proofreading", version.ref = "genAi" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
