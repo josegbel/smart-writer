@@ -57,6 +57,9 @@ dependencies {
 
     implementation(libs.genai.summarization)
     implementation(libs.genai.proofreading)
+    implementation(libs.genai.rewriting)
+    implementation(libs.genai.imagedescription)
+
     implementation(libs.kotlinx.coroutines.guava)
 
     ksp(libs.hilt.compiler)

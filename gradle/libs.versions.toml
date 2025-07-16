@@ -31,6 +31,8 @@ androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", vers
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 genai-summarization = { module = "com.google.mlkit:genai-summarization", version.ref = "genAi" }
 genai-proofreading = { module = "com.google.mlkit:genai-proofreading", version.ref = "genAi" }
+genai-rewriting = { module = "com.google.mlkit:genai-rewriting", version.ref = "genAi" }
+genai-imagedescription = { module = "com.google.mlkit:genai-image-description", version.ref = "genAi" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

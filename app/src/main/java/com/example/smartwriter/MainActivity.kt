@@ -34,10 +34,17 @@ import com.example.smartwriter.ui.composables.screens.ImageDescScreen
 import com.example.smartwriter.ui.composables.screens.ProofreadingScreen
 import com.example.smartwriter.ui.composables.SmartWriterAppBar
 import com.example.smartwriter.ui.composables.screens.SummarisationScreen
-import com.example.smartwriter.ui.composables.screens.TextRewritingScreen
+import com.example.smartwriter.ui.composables.screens.RewritingScreen
 import com.example.smartwriter.ui.model.ProofreadingUiEvent
+import com.example.smartwriter.ui.model.RewritingUiEvent
 import com.example.smartwriter.ui.model.SummarisationUiEvent
 import com.example.smartwriter.ui.theme.SmartWriterTheme
+import com.example.smartwriter.viewmodel.MainActivityState
+import com.example.smartwriter.viewmodel.MainActivityViewModel
+import com.example.smartwriter.viewmodel.ProofreadingViewModel
+import com.example.smartwriter.viewmodel.RewritingViewModel
+import com.example.smartwriter.viewmodel.SelectedScreen
+import com.example.smartwriter.viewmodel.SummarisationViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -50,7 +57,7 @@ private data object SummarisationRoute : NavRoute
 
 private data object ProofreadingRoute : NavRoute
 
-private data object TextRewritingRoute : NavRoute
+private data object RewritingRoute : NavRoute
 
 private data object ImageDescRoute : NavRoute
 
@@ -210,9 +217,31 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-        is TextRewritingRoute ->
+        is RewritingRoute ->
             NavEntry(key) {
-                TextRewritingScreen()
+                val viewModel by viewModels<RewritingViewModel>()
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                val localSnackBarState =
+                    LocalSnackbarHostState.current
+
+                LaunchedEffect(Unit) {
+                    viewModel.uiEvent.collectLatest {
+                        when (it) {
+                            is RewritingUiEvent.Error -> {
+                                if (it.message.isNotBlank()) {
+                                    localSnackBarState.showSnackbar(
+                                        it.message
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                RewritingScreen(
+                    uiState = uiState,
+                    onInputTextChanged = viewModel::onInputTextChanged,
+                    onRewriteClicked = viewModel::onRewriteClicked,
+                )
             }
 
         is ImageDescRoute ->
@@ -246,8 +275,8 @@ class MainActivity : ComponentActivity() {
             }
 
             SelectedScreen.TEXT_REWRITING -> {
-                if (backStack.lastOrNull() !is TextRewritingRoute) {
-                    backStack += TextRewritingRoute
+                if (backStack.lastOrNull() !is RewritingRoute) {
+                    backStack += RewritingRoute
                 }
             }
 

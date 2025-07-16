@@ -1,4 +1,4 @@
-package com.example.smartwriter
+package com.example.smartwriter.viewmodel
 
 import android.content.Context
 import android.util.Log
@@ -13,9 +13,6 @@ import com.google.mlkit.genai.summarization.Summarization
 import com.google.mlkit.genai.summarization.SummarizationRequest
 import com.google.mlkit.genai.summarization.Summarizer
 import com.google.mlkit.genai.summarization.SummarizerOptions
-import com.google.mlkit.genai.summarization.SummarizerOptions.InputType
-import com.google.mlkit.genai.summarization.SummarizerOptions.Language
-import com.google.mlkit.genai.summarization.SummarizerOptions.OutputType
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -42,38 +39,27 @@ class SummarisationViewModel
 
         private var summarizer: Summarizer? = null
 
-        // ------------------------------------------------------------
-        // Lifecycle
-        // ------------------------------------------------------------
         override fun onCleared() {
-            Log.d(TAG, "onCleared() called – Closing summarizer")
             summarizer?.close()
             super.onCleared()
         }
 
-        // ------------------------------------------------------------
-        // UI Events
-        // ------------------------------------------------------------
         fun onInputTextChanged(newText: String) {
-            Log.d(TAG, "onInputTextChanged() with length=${newText.length}")
             _uiState.update { it.copy(inputText = newText) }
         }
 
         fun onSummariseClicked(context: Context) {
-            Log.d(TAG, "onSummariseClicked()")
             viewModelScope.launch {
                 try {
-                    Log.d(TAG, "Building SummarizerOptions")
                     val summarizerOptions =
                         SummarizerOptions
                             .builder(context)
-                            .setInputType(InputType.ARTICLE)
-                            .setOutputType(OutputType.ONE_BULLET)
-                            .setLanguage(Language.ENGLISH)
+                            .setInputType(SummarizerOptions.InputType.ARTICLE)
+                            .setOutputType(SummarizerOptions.OutputType.ONE_BULLET)
+                            .setLanguage(SummarizerOptions.Language.ENGLISH)
                             .build()
 
                     summarizer = Summarization.getClient(summarizerOptions)
-                    Log.d(TAG, "Summarizer client obtained")
 
                     prepareAndStartSummarization()
                 } catch (e: Exception) {
@@ -87,7 +73,6 @@ class SummarisationViewModel
         // Summarization Flow
         // ------------------------------------------------------------
         suspend fun prepareAndStartSummarization() {
-            Log.d(TAG, "prepareAndStartSummarization()")
             val featureStatus = summarizer?.checkFeatureStatus()?.await()
             Log.d(TAG, "Feature status: $featureStatus")
 

@@ -1,4 +1,4 @@
-package com.example.smartwriter
+package com.example.smartwriter.viewmodel
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel

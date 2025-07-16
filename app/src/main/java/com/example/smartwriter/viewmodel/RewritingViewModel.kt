@@ -1,18 +1,18 @@
-package com.example.smartwriter
+package com.example.smartwriter.viewmodel
 
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.smartwriter.ui.model.ProofreadingUiEvent
-import com.example.smartwriter.ui.model.ProofreadingUiState
+import com.example.smartwriter.ui.model.RewritingUiEvent
+import com.example.smartwriter.ui.model.RewritingUiState
 import com.google.mlkit.genai.common.DownloadCallback
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.common.GenAiException
-import com.google.mlkit.genai.proofreading.Proofreader
-import com.google.mlkit.genai.proofreading.ProofreaderOptions
-import com.google.mlkit.genai.proofreading.Proofreading
-import com.google.mlkit.genai.proofreading.ProofreadingRequest
+import com.google.mlkit.genai.rewriting.Rewriter
+import com.google.mlkit.genai.rewriting.RewriterOptions
+import com.google.mlkit.genai.rewriting.Rewriting
+import com.google.mlkit.genai.rewriting.RewritingRequest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -24,67 +24,50 @@ import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class ProofreadingViewModel
+class RewritingViewModel
     @Inject
     constructor() : ViewModel() {
         companion object {
-            private val TAG = ProofreadingViewModel::class.java.simpleName
+            private val TAG = RewritingViewModel::class.java.simpleName
         }
 
-        private val _uiState = MutableStateFlow(ProofreadingUiState())
-        val uiState: StateFlow<ProofreadingUiState> = _uiState.asStateFlow()
+        private val _uiState = MutableStateFlow(RewritingUiState())
+        val uiState: StateFlow<RewritingUiState> = _uiState.asStateFlow()
 
-        private val _uiEvent = MutableSharedFlow<ProofreadingUiEvent>()
-        val uiEvent: SharedFlow<ProofreadingUiEvent> = _uiEvent.asSharedFlow()
+        private val _uiEvent = MutableSharedFlow<RewritingUiEvent>()
+        val uiEvent: SharedFlow<RewritingUiEvent> = _uiEvent.asSharedFlow()
 
-        private var proofreader: Proofreader? = null
+        private var rewriter: Rewriter? = null
 
-        // ------------------------------------------------------------
-        // Lifecycle
-        // ------------------------------------------------------------
         override fun onCleared() {
-            Log.d(TAG, "onCleared() called – Closing summarizer")
-            proofreader?.close()
+            rewriter?.close()
             super.onCleared()
         }
 
-        // ------------------------------------------------------------
-        // UI Events
-        // ------------------------------------------------------------
         fun onInputTextChanged(newText: String) {
-            Log.d(TAG, "onInputTextChanged() with length=${newText.length}")
             _uiState.update { it.copy(inputText = newText) }
         }
 
-        fun onProofreadClicked(context: Context) {
-            Log.d(TAG, "onProofreadClicked()")
+        fun onRewriteClicked(context: Context) {
             viewModelScope.launch {
                 try {
-                    Log.d(TAG, "Building ProofreaderOptions")
-                    val options = ProofreaderOptions.builder(context)
-                        // InputType can be KEYBOARD or VOICE. VOICE indicates that
-                        // the user generated text based on audio input.
-                        .setInputType(ProofreaderOptions.InputType.KEYBOARD)
-                        .setLanguage(ProofreaderOptions.Language.ENGLISH)
+                    val options = RewriterOptions.builder(context)
+                        .setOutputType(RewriterOptions.OutputType.ELABORATE)
+                        .setLanguage(RewriterOptions.Language.ENGLISH)
                         .build()
 
-                    proofreader = Proofreading.getClient(options)
-                    Log.d(TAG, "Summarizer client obtained")
+                    rewriter = Rewriting.getClient(options)
 
-                    prepareAndStartProofreading()
+                    prepareAndStartRewriting()
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error in onProofreadClicked: ${e.message}", e)
-                    _uiEvent.emit(ProofreadingUiEvent.Error(message = "Error: ${e.message}"))
+                    Log.e(TAG, "Error in onRewriteClicked: ${e.message}", e)
+                    _uiEvent.emit(RewritingUiEvent.Error(message = "Error: ${e.message}"))
                 }
             }
         }
 
-        // ------------------------------------------------------------
-        // Summarization Flow
-        // ------------------------------------------------------------
-        suspend fun prepareAndStartProofreading() {
-            Log.d(TAG, "prepareAndStartSummarization()")
-            val featureStatus = proofreader?.checkFeatureStatus()?.await()
+        suspend fun prepareAndStartRewriting() {
+            val featureStatus = rewriter?.checkFeatureStatus()?.await()
             Log.d(TAG, "Feature status: $featureStatus")
 
             when (featureStatus) {
@@ -95,27 +78,27 @@ class ProofreadingViewModel
 
                 FeatureStatus.DOWNLOADING -> {
                     Log.d(TAG, "Feature DOWNLOADING – will start once ready")
-                    proofreader?.let { startProofreadingRequest(uiState.value.inputText, it) }
+                    rewriter?.let { startRewritingRequest(uiState.value.inputText, it) }
                 }
 
                 FeatureStatus.AVAILABLE -> {
                     Log.d(TAG, "Feature AVAILABLE – running inference")
                     _uiState.update { it.copy(isLoading = true) }
-                    proofreader?.let {
-                        Log.d(TAG, "starting proofreading request")
-                        startProofreadingRequest(uiState.value.inputText, it)
+                    rewriter?.let {
+                        Log.d(TAG, "starting rewriting request")
+                        startRewritingRequest(uiState.value.inputText, it)
                     }
                 }
 
                 FeatureStatus.UNAVAILABLE, null -> {
                     Log.e(TAG, "Feature UNAVAILABLE")
-                    _uiEvent.emit(ProofreadingUiEvent.Error(message = "Your device does not support this feature."))
+                    _uiEvent.emit(RewritingUiEvent.Error(message = "Your device does not support this feature."))
                 }
             }
         }
 
         private fun downloadFeature() {
-            proofreader?.downloadFeature(
+            rewriter?.downloadFeature(
                 object : DownloadCallback {
                     override fun onDownloadStarted(bytesToDownload: Long) {
                         _uiState.update { it.copy(isLoading = true) }
@@ -130,14 +113,14 @@ class ProofreadingViewModel
                     override fun onDownloadCompleted() {
                         _uiState.update { it.copy(isLoading = false) }
                         Log.d(TAG, "Download completed – starting inference")
-                        proofreader?.let { startProofreadingRequest(uiState.value.inputText, it) }
+                        rewriter?.let { startRewritingRequest(uiState.value.inputText, it) }
                     }
 
                     override fun onDownloadFailed(e: GenAiException) {
                         _uiState.update { it.copy(isLoading = false) }
                         Log.e(TAG, "Download failed: ${e.message}", e)
                         _uiEvent.tryEmit(
-                            ProofreadingUiEvent.Error(
+                            RewritingUiEvent.Error(
                                 message = "Download failed: ${e.message}",
                             ),
                         )
@@ -146,22 +129,22 @@ class ProofreadingViewModel
             )
         }
 
-        fun startProofreadingRequest(
+        fun startRewritingRequest(
             text: String,
-            proofreader: Proofreader,
+            rewriter: Rewriter,
         ) {
-            val proofreadingRequest = ProofreadingRequest.builder(text).build()
+            val rewritingRequest = RewritingRequest.builder(text).build()
             _uiState.update { it.copy(isLoading = true) }
             viewModelScope.launch {
                 try {
-                    val results = proofreader.runInference(proofreadingRequest).await().results
+                    val results = rewriter.runInference(rewritingRequest).await().results
                     _uiState.update { state ->
                         state.copy(correctionSuggestions = results.map { it.text })
                     }
                 } catch (e: Exception) {
                     _uiEvent.emit(
-                        ProofreadingUiEvent.Error(
-                            message = "Error during proofreading: ${e.message}",
+                        RewritingUiEvent.Error(
+                            message = "Error during rewriting: ${e.message}",
                         ),
                     )
                 } finally {
