@@ -51,10 +51,12 @@ class RewritingViewModel
         fun onRewriteClicked(context: Context) {
             viewModelScope.launch {
                 try {
-                    val options = RewriterOptions.builder(context)
-                        .setOutputType(RewriterOptions.OutputType.ELABORATE)
-                        .setLanguage(RewriterOptions.Language.ENGLISH)
-                        .build()
+                    val options =
+                        RewriterOptions
+                            .builder(context)
+                            .setOutputType(RewriterOptions.OutputType.ELABORATE)
+                            .setLanguage(RewriterOptions.Language.ENGLISH)
+                            .build()
 
                     rewriter = Rewriting.getClient(options)
 

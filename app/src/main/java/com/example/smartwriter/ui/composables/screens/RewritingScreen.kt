@@ -64,7 +64,7 @@ fun RewritingScreen(
             Text("Suggested rewrites:", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             uiState.correctionSuggestions.forEachIndexed { index, suggestion ->
-                Text("- ${index}: $suggestion", style = MaterialTheme.typography.bodyMedium)
+                Text("- $index: $suggestion", style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(4.dp))
             }
         }

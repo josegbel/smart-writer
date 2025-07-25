@@ -24,21 +24,24 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.example.smartwriter.ui.composables.DrawerContent
+import com.example.smartwriter.ui.composables.SmartWriterAppBar
 import com.example.smartwriter.ui.composables.screens.HomeScreen
 import com.example.smartwriter.ui.composables.screens.ImageDescScreen
 import com.example.smartwriter.ui.composables.screens.ProofreadingScreen
-import com.example.smartwriter.ui.composables.SmartWriterAppBar
-import com.example.smartwriter.ui.composables.screens.SummarisationScreen
 import com.example.smartwriter.ui.composables.screens.RewritingScreen
+import com.example.smartwriter.ui.composables.screens.SummarisationScreen
+import com.example.smartwriter.ui.model.ImageDescUiEvent
 import com.example.smartwriter.ui.model.ProofreadingUiEvent
 import com.example.smartwriter.ui.model.RewritingUiEvent
 import com.example.smartwriter.ui.model.SummarisationUiEvent
 import com.example.smartwriter.ui.theme.SmartWriterTheme
+import com.example.smartwriter.viewmodel.ImageDescViewModel
 import com.example.smartwriter.viewmodel.MainActivityState
 import com.example.smartwriter.viewmodel.MainActivityViewModel
 import com.example.smartwriter.viewmodel.ProofreadingViewModel
@@ -121,12 +124,15 @@ class MainActivity : ComponentActivity() {
                             },
                             topBar = {
                                 SmartWriterAppBar(
-                                    onNavigationIconClick =  {
+                                    onNavigationIconClick = {
                                         scope.launch {
-                                            if (drawerState.isClosed) drawerState.open()
-                                            else drawerState.close()
+                                            if (drawerState.isClosed) {
+                                                drawerState.open()
+                                            } else {
+                                                drawerState.close()
+                                            }
                                         }
-                                    }
+                                    },
                                 )
                             },
                         ) { contentPadding ->
@@ -156,105 +162,130 @@ class MainActivity : ComponentActivity() {
 
     private fun setNavigationEntry(
         key: NavRoute,
-        LocalSnackbarHostState: ProvidableCompositionLocal<SnackbarHostState>
-    ): NavEntry<NavRoute> = when (key) {
-        is HomeRoute ->
-            NavEntry(key) {
-                HomeScreen()
-            }
+        LocalSnackbarHostState: ProvidableCompositionLocal<SnackbarHostState>,
+    ): NavEntry<NavRoute> =
+        when (key) {
+            is HomeRoute ->
+                NavEntry(key) {
+                    HomeScreen()
+                }
 
-        is SummarisationRoute ->
-            NavEntry(key) {
-                val viewModel by viewModels<SummarisationViewModel>()
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                val localSnackBarState =
-                    LocalSnackbarHostState.current
+            is SummarisationRoute ->
+                NavEntry(key) {
+                    val viewModel by viewModels<SummarisationViewModel>()
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    val localSnackBarState =
+                        LocalSnackbarHostState.current
 
-                LaunchedEffect(Unit) {
-                    viewModel.uiEvent.collectLatest {
-                        when (it) {
-                            is SummarisationUiEvent.Error -> {
-                                if (it.message.isNotBlank()) {
-                                    localSnackBarState.showSnackbar(
-                                        it.message
-                                    )
+                    LaunchedEffect(Unit) {
+                        viewModel.uiEvent.collectLatest {
+                            when (it) {
+                                is SummarisationUiEvent.Error -> {
+                                    if (it.message.isNotBlank()) {
+                                        localSnackBarState.showSnackbar(
+                                            it.message,
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+                    SummarisationScreen(
+                        uiState = uiState,
+                        onInputTextChanged = viewModel::onInputTextChanged,
+                        onSummariseClicked = viewModel::onSummariseClicked,
+                    )
                 }
-                SummarisationScreen(
-                    uiState = uiState,
-                    onInputTextChanged = viewModel::onInputTextChanged,
-                    onSummariseClicked = viewModel::onSummariseClicked,
-                )
-            }
 
-        is ProofreadingRoute ->
-            NavEntry(key) {
-                val viewModel by viewModels<ProofreadingViewModel>()
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                val localSnackBarState =
-                    LocalSnackbarHostState.current
+            is ProofreadingRoute ->
+                NavEntry(key) {
+                    val viewModel by viewModels<ProofreadingViewModel>()
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    val localSnackBarState =
+                        LocalSnackbarHostState.current
 
-                LaunchedEffect(Unit) {
-                    viewModel.uiEvent.collectLatest {
-                        when (it) {
-                            is ProofreadingUiEvent.Error -> {
-                                if (it.message.isNotBlank()) {
-                                    localSnackBarState.showSnackbar(
-                                        it.message
-                                    )
+                    LaunchedEffect(Unit) {
+                        viewModel.uiEvent.collectLatest {
+                            when (it) {
+                                is ProofreadingUiEvent.Error -> {
+                                    if (it.message.isNotBlank()) {
+                                        localSnackBarState.showSnackbar(
+                                            it.message,
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+                    ProofreadingScreen(
+                        uiState = uiState,
+                        onInputTextChanged = viewModel::onInputTextChanged,
+                        onProofreadClicked = viewModel::onProofreadClicked,
+                    )
                 }
-                ProofreadingScreen(
-                    uiState = uiState,
-                    onInputTextChanged = viewModel::onInputTextChanged,
-                    onProofreadClicked = viewModel::onProofreadClicked,
-                )
-            }
 
-        is RewritingRoute ->
-            NavEntry(key) {
-                val viewModel by viewModels<RewritingViewModel>()
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                val localSnackBarState =
-                    LocalSnackbarHostState.current
+            is RewritingRoute ->
+                NavEntry(key) {
+                    val viewModel by viewModels<RewritingViewModel>()
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    val localSnackBarState =
+                        LocalSnackbarHostState.current
 
-                LaunchedEffect(Unit) {
-                    viewModel.uiEvent.collectLatest {
-                        when (it) {
-                            is RewritingUiEvent.Error -> {
-                                if (it.message.isNotBlank()) {
-                                    localSnackBarState.showSnackbar(
-                                        it.message
-                                    )
+                    LaunchedEffect(Unit) {
+                        viewModel.uiEvent.collectLatest {
+                            when (it) {
+                                is RewritingUiEvent.Error -> {
+                                    if (it.message.isNotBlank()) {
+                                        localSnackBarState.showSnackbar(
+                                            it.message,
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+                    RewritingScreen(
+                        uiState = uiState,
+                        onInputTextChanged = viewModel::onInputTextChanged,
+                        onRewriteClicked = viewModel::onRewriteClicked,
+                    )
                 }
-                RewritingScreen(
-                    uiState = uiState,
-                    onInputTextChanged = viewModel::onInputTextChanged,
-                    onRewriteClicked = viewModel::onRewriteClicked,
-                )
-            }
 
-        is ImageDescRoute ->
-            NavEntry(key) {
-                ImageDescScreen()
-            }
+            is ImageDescRoute ->
+                NavEntry(key) {
+                    val localSnackBarState = LocalSnackbarHostState.current
+                    val viewModel by viewModels<ImageDescViewModel>()
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-        else -> throw IllegalArgumentException("Unknown route: $key")
-    }
+                    LaunchedEffect(Unit) {
+                        viewModel.uiEvent.collectLatest {
+                            when (it) {
+                                is ImageDescUiEvent.Error -> {
+                                    if (it.message.isNotBlank()) {
+                                        localSnackBarState.showSnackbar(
+                                            it.message,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    val context = LocalContext.current
+                    ImageDescScreen(
+                        uiState = uiState,
+                        onImageSelected = { uri ->
+                            viewModel.onImageSelected(uri)
+                            viewModel.describe(context)
+                        },
+                    )
+                }
+
+            else -> throw IllegalArgumentException("Unknown route: $key")
+        }
 
     private fun updateBackStack(
         uiState: MainActivityState,
-        backStack: SnapshotStateList<NavRoute>
+        backStack: SnapshotStateList<NavRoute>,
     ) {
         when (uiState.selectedScreen) {
             SelectedScreen.HOME -> {

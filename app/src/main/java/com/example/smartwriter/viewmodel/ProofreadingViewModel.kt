@@ -51,12 +51,14 @@ class ProofreadingViewModel
         fun onProofreadClicked(context: Context) {
             viewModelScope.launch {
                 try {
-                    val options = ProofreaderOptions.builder(context)
-                        // InputType can be KEYBOARD or VOICE. VOICE indicates that
-                        // the user generated text based on audio input.
-                        .setInputType(ProofreaderOptions.InputType.KEYBOARD)
-                        .setLanguage(ProofreaderOptions.Language.ENGLISH)
-                        .build()
+                    val options =
+                        ProofreaderOptions
+                            .builder(context)
+                            // InputType can be KEYBOARD or VOICE. VOICE indicates that
+                            // the user generated text based on audio input.
+                            .setInputType(ProofreaderOptions.InputType.KEYBOARD)
+                            .setLanguage(ProofreaderOptions.Language.ENGLISH)
+                            .build()
 
                     proofreader = Proofreading.getClient(options)
 

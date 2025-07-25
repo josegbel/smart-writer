@@ -17,8 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.example.smartwriter.viewmodel.MainActivityState
 import com.example.smartwriter.R
+import com.example.smartwriter.viewmodel.MainActivityState
 import com.example.smartwriter.viewmodel.SelectedScreen
 
 @Composable
@@ -28,7 +28,7 @@ fun DrawerContent(
     onProofreadingClicked: () -> Unit,
     onTextRewritingClicked: () -> Unit,
     onImageDescriptionClicked: () -> Unit,
-    onHomeClicked: () -> Unit
+    onHomeClicked: () -> Unit,
 ) {
     Column(
         modifier =
@@ -52,8 +52,7 @@ fun DrawerContent(
         NavigationDrawerItem(
             label = { Text(stringResource(R.string.main_activity_drawer_text_summarization)) },
             selected = uiState.selectedScreen == SelectedScreen.SUMMARIZATION,
-            onClick = onTextSummarisationClicked
-            ,
+            onClick = onTextSummarisationClicked,
         )
         NavigationDrawerItem(
             label = { Text(stringResource(R.string.main_activity_drawer_proofreading)) },
