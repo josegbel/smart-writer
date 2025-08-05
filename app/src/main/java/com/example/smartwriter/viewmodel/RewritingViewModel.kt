@@ -48,13 +48,17 @@ class RewritingViewModel
             _uiState.update { it.copy(inputText = newText) }
         }
 
-        fun onRewriteClicked(context: Context) {
+        fun onOutputTypeSelected(outputType: OutputType) {
+            _uiState.update { it.copy(selectedOutputType = outputType) }
+        }
+
+    fun onRewriteClicked(context: Context) {
             viewModelScope.launch {
                 try {
                     val options =
                         RewriterOptions
                             .builder(context)
-                            .setOutputType(RewriterOptions.OutputType.ELABORATE)
+                            .setOutputType(_uiState.value.selectedOutputType.value)
                             .setLanguage(RewriterOptions.Language.ENGLISH)
                             .build()
 
@@ -155,3 +159,12 @@ class RewritingViewModel
             }
         }
     }
+
+enum class OutputType(val value: Int, val displayName: String) {
+    ELABORATE(RewriterOptions.OutputType.ELABORATE, "Elaborate"),
+    EMOJIFY(RewriterOptions.OutputType.EMOJIFY, "Emojify"),
+    SHORTEN(RewriterOptions.OutputType.SHORTEN, "Shorten"),
+    FRIENDLY(RewriterOptions.OutputType.FRIENDLY, "Friendly"),
+    PROFESSIONAL(RewriterOptions.OutputType.PROFESSIONAL, "Professional"),
+    REPHRASE(RewriterOptions.OutputType.REPHRASE, "Rephrase"),
+}

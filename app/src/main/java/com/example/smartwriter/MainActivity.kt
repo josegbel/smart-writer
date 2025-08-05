@@ -248,6 +248,7 @@ class MainActivity : ComponentActivity() {
                         uiState = uiState,
                         onInputTextChanged = viewModel::onInputTextChanged,
                         onRewriteClicked = viewModel::onRewriteClicked,
+                        onOutputTypeSelected = viewModel::onOutputTypeSelected,
                     )
                 }
 
